@@ -10,7 +10,7 @@ Rubyからled5sec.shを呼び出すサンプル
 led5blink.rb  
 ５回LEDを点滅するサンプル(Ruby)
 
-  以下の手順が必要
+  以下の手順が必要  
   bundlerをインストール  
   $ sudo apt-get install bundler
 
@@ -19,3 +19,14 @@ led5blink.rb
 
   実行方法
   $ sudo bundle exec ruby led10blink.rb
+
+
+ledloop.py  
+LEDの点滅を繰り返すサンプル(Python)
+
+ledswitch.py  
+タクトスイッチを押すとLEDが点灯するサンプル(Python)
+
+  実行方法
+  $ sudo python ledswitch.py
+
