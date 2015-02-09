@@ -25,8 +25,11 @@ ledloop.py
 LEDの点滅を繰り返すサンプル(Python)
 
 ledswitch.py  
-タクトスイッチを押すとLEDが点灯するサンプル(Python)
-Raspberry Pi内蔵のプルダウン抵抗を使用したサンプル
+タクトスイッチを押すとLEDが点灯するサンプル(Python)  
+Raspberry Pi内蔵のプルダウン抵抗を使用したサンプル  
+
+ledtoggle.py  
+タクトスイッチを押すとLEDが点灯し、もう一度押すと消える(トグル)サンプル
 
   実行方法
   $ sudo python ledswitch.py
