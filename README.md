@@ -29,7 +29,11 @@ ledswitch.py
 Raspberry Pi内蔵のプルダウン抵抗を使用したサンプル  
 
 ledtoggle.py  
-タクトスイッチを押すとLEDが点灯し、もう一度押すと消える(トグル)サンプル
+タクトスイッチを押すとLEDが点灯し、もう一度押すと消える(トグル)サンプル  
+
+temperature.py
+温度センサーのサンプル(Python)  
+センサーがちゃんと結線されていないとエラーになる  
 
   実行方法
   $ sudo python ledswitch.py
