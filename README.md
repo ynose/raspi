@@ -35,6 +35,9 @@ temperature.py
 温度センサーのサンプル(Python)  
 センサーがちゃんと結線されていないとエラーになる  
 
+ledpwm.ph  
+可変抵抗からのアナログ入力を読み取ってPWMでLEDの明るさを変えるサンプル 
+
   実行方法
   $ sudo python ledswitch.py
 
