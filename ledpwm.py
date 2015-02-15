@@ -29,4 +29,4 @@ except KeyboardInterrupt:
   pass
 
 p.stop()
-GIPO.claenup()
+GPIO.cleanup()
