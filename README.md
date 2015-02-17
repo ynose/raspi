@@ -38,6 +38,10 @@ temperature.py
 ledpwm.ph  
 可変抵抗からのアナログ入力を読み取ってPWMでLEDの明るさを変えるサンプル 
 
+7segledloop.py  
+7セグLED1桁カソードコモンのサンプル  
+
+
   実行方法
   $ sudo python ledswitch.py
 
