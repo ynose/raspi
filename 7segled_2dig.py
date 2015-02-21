@@ -8,9 +8,9 @@ import socket
 
 # カソード・コモンの7セグLEDに接続されているGPIO番号を定義
 # 7セグLEDのセグメントabcdefg+dpのアノードに接続されているGPIO番号
-seg_gpio = (4, 17, 27, 22, 10, 9, 11, 7)
+seg_gpio = (15, 18, 24, 25, 8, 14, 4, 23)
 # 10の位、1の位の7セグLEDのカソードに接続されているGPIO番号
-led_gpio = (14, 15) #, 18, 23)
+led_gpio = (9, 11) #, 18, 23)
 
 # 7セグLEDに数字を表現するために点灯させるセグメント(a〜g)の対応表
 num_segs = ((1, 1, 1, 1, 1, 1, 0),  # 0
@@ -113,10 +113,10 @@ if __name__ == "__main__":
     led = LedThread()
     led.start();
     try:
-        for number in range(0, 2):
+        for number in range(0, 100):
             print(number)
             led.display_number(number)
-            time.sleep(0.5)
+            time.sleep(0.2)
     except KeyboardInterrupt:
         print '\nbreak'
     led.stop()
