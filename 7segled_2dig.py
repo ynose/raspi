@@ -4,7 +4,8 @@
 import RPi.GPIO as GPIO
 import threading
 import time
-import socket
+#import socket
+import smbus
 
 # カソード・コモンの7セグLEDに接続されているGPIO番号を定義
 # 7セグLEDのセグメントabcdefg+dpのアノードに接続されているGPIO番号
@@ -98,6 +99,16 @@ class LedThread(threading.Thread):
             self.dig[dot] = self.dig[dot] | 0x80
         rlock.release()
 
+def read_adt7410():
+    word_data = bus.read_word_data(address_adt7410, register_adt7410)
+    data = (word_data & 0xff00)>>8 | (word_data & 0xff)<<8
+    data = data>>3  # 13ビットデータ
+    if data & 0x1000 == 0:  # 温度が正または0の場合
+        temperature = data*0.0625
+    else: # 温度が負の場合、絶対値を取ってからマイナスをかける
+        temperature = ( (~data & 0x1fff) + 1) * -0.0625
+    return temperature
+
 if __name__ == "__main__":
     GPIO.setmode(GPIO.BCM)  # GPIO番号で指定
     GPIO.setwarnings(False)
@@ -108,17 +119,27 @@ if __name__ == "__main__":
     #sock.close()
     #array = ip.rsplit('.')
     # led thread start
+
+    bus = smbus.SMBus(1)
+    address_adt7410 = 0x48
+    register_adt7410 = 0x00
     
     # LEDの表示をスタート
     led = LedThread()
     led.start();
     try:
-        for number in range(0, 100):
-            print(number)
-            led.display_number(number)
-            time.sleep(0.2)
+#         for number in range(0, 100):
+#             print(number)
+#             led.display_number(number)
+#             time.sleep(0.2)
+        while True:
+            inputValue = read_adt7410()
+            #print(inputValue, int(inputValue))
+            led.display_number(int(inputValue))
+            
     except KeyboardInterrupt:
         print '\nbreak'
+        
     led.stop()
     led.join()
     GPIO.cleanup()
