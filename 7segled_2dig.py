@@ -11,7 +11,7 @@ import smbus
 # 7セグLEDのセグメントabcdefg+dpのアノードに接続されているGPIO番号
 seg_gpio = (15, 18, 24, 25, 8, 14, 4, 23)
 # 10の位、1の位の7セグLEDのカソードに接続されているGPIO番号
-led_gpio = (9, 11) #, 18, 23)
+led_gpio = (9, 11)
 
 # 7セグLEDに数字を表現するために点灯させるセグメント(a〜g)の対応表
 num_segs = ((1, 1, 1, 1, 1, 1, 0),  # 0
@@ -69,12 +69,10 @@ class LedThread(threading.Thread):
             rlock.release()
     def stop(self):
         self.running = False
-    def set(self, a, b): #, c, d):
+    def set(self, a, b):
         rlock.acquire()
         self.dig[0] = a
         self.dig[1] = b
-        #self.dig[2] = c
-        #self.dig[3] = d
         rlock.release()
     def display_number(self, number, width=0, dot=-1):
         str = '{0:>.{width}f}'.format(number, width=width)
@@ -109,24 +107,40 @@ def read_adt7410():
         temperature = ( (~data & 0x1fff) + 1) * -0.0625
     return temperature
 
+def led_demo():
+    # 7セグLEDのアノードをLOWに初期化
+    for gpio in seg_gpio:
+        GPIO.setup(gpio, GPIO.OUT, initial=GPIO.LOW)
+    # 7セグLEDのカソードをHIGHに初期化
+    for gpio in led_gpio:
+        GPIO.setup(gpio, GPIO.OUT, initial=GPIO.HIGH)
+
+    GPIO.output(led_gpio[0], GPIO.LOW)
+    GPIO.output(led_gpio[1], GPIO.LOW)
+
+    for n in range(0, 6):
+        GPIO.output(seg_gpio[n], GPIO.HIGH)
+        time.sleep(0.2)
+    
+    GPIO.output(led_gpio[0], GPIO.HIGH)
+    GPIO.output(led_gpio[1], GPIO.HIGH)
+    GPIO.cleanup()
+
+
+
 if __name__ == "__main__":
     GPIO.setmode(GPIO.BCM)  # GPIO番号で指定
     GPIO.setwarnings(False)
-    # get ip address
-    #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    #sock.connect(('google.com', 0)) # dummy connect
-    #ip = sock.getsockname()[0]
-    #sock.close()
-    #array = ip.rsplit('.')
-    # led thread start
 
     bus = smbus.SMBus(1)
     address_adt7410 = 0x48
     register_adt7410 = 0x00
+
+    led_demo()
     
     # LEDの表示をスタート
     led = LedThread()
-    led.start();
+    led.start()
     try:
 #         for number in range(0, 100):
 #             print(number)
