@@ -21,11 +21,17 @@ c_pin = 9
 latch_pin = 4
 oe_pin = 2
 
+# MatrixLED物理制御クラス
 class MatrixLED:
     def __init__(self):
-        self.screen = [[0 for x in xrange(32)] for x in xrange(16)]
+        # 16x32のスクリーンを定義    
+        self.screen = [[0 for x in xrange(32)] for y in xrange(16)]
+        print "MatrixLED.init"
+
+        # GPIOのセットアップ
 #        GPIO.setmode(GPIO.BCM)
 #        GPIO.setwarnings(False)
+
 #        GPIO.setup(red1_pin, GPIO.OUT, initial=GPIO.LOW)
 #        GPIO.setup(green1_pin, GPIO.OUT, initial=GPIO.LOW)
 #        GPIO.setup(blue1_pin, GPIO.OUT, initial=GPIO.LOW)
@@ -38,7 +44,6 @@ class MatrixLED:
 #        GPIO.setup(c_pin, GPIO.OUT, initial=GPIO.LOW)
 #        GPIO.setup(latch_pin, GPIO.OUT, initial=GPIO.LOW)
 #        GPIO.setup(oe_pin, GPIO.OUT, initial=GPIO.LOW)
-        print "init"
 
     def screen():
         return self.sereen
@@ -86,6 +91,7 @@ class MatrixLED:
     def set_pixel(self, x, y, color):
         self.screen[y][x] = color
 
+    # LEDの表示リフレッシュ
     def refresh():
         # 上下８行ずつに分けて出力する
         for row in range(8):
@@ -102,11 +108,83 @@ class MatrixLED:
 #            GPIO.output(oe_pin, 0)
             time.sleep(delay)
 
+# LED表示スレッド
 rlock = threading.RLock()
+class LedThread(threading.Thread):
+    def __init__(self):
+        print "LedThread.init"
+        threading.Thread.__init__(self)
 
+        self.led = MatrixLED()
+        self.running = True
+
+    def run(self):
+        print "LedThread.run"
+
+        while self.running:
+            rlock.acquire()
+
+            self.led.refresh
+#            time.sleep(0.005)
+            rlock.release
+            
+    def stop(self):
+        self.running = False
+        print "stop"
+
+    def display_date(self, month, day):
+        # 日付mm.ddの表示
+        rlock.acquire()
+
+        bitmap = BitmapNumber()
+
+        left = 0
+        top = 11
+        
+        offset = (left, top)
+        number = bitmap.bit_of_number(month)
+        left += len(number) - 1
+        for y in range(len(number)):
+            for x in range(len(number[y])):
+                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
+
+        offset = (left, top)
+        number = bitmap.bit_of_number(month)
+        left += len(number) - 1
+        for y in range(len(number)):
+            for x in range(len(number[y])):
+                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
+
+        offset = (left, 15)
+        left += 2
+        self.led.set_pixel(offset[0] + 0, offset[1] + 0, 1)
+
+        offset = (left, top)
+        number = bitmap.bit_of_number(day)
+        left += len(number) - 1
+        for y in range(len(number)):
+            for x in range(len(number[y])):
+                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
+
+        offset = (left, top)
+        number = bitmap.bit_of_number(day)
+        left += len(number) - 1
+        for y in range(len(number)):
+            for x in range(len(number[y])):
+                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
+
+        rlock.release()
+
+        # Matrixのbitをコンソールに表示
+        print "LedThread.display_date"
+        screen = self.led.screen
+        for row in range(len(screen)):
+            print screen[row]
+
+# 数字のビットマップ定義クラス
 class BitmapNumber:
     def __init__(self):
-        self.bitmap = [0 for x in xrange(10)]
+        self.bitmap = [0 for x in range(10)] # 0で初期化された配列を作る
 
         self.bitmap[0] = ((0,1,0,0),
                           (1,0,1,0),
@@ -119,71 +197,9 @@ class BitmapNumber:
                           (0,1,0,0),
                           (0,1,0,0),
                           (1,1,1,0))
-        print "BitmapNumber.init"
 
-    def number(self, no):
+    def bit_of_number(self, no):
         return self.bitmap[no]
-
-class LedThread(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.led = MatrixLED()
-        self.dig = [0, 0]
-        self.running = True
-
-    def run(self):
-        while self.running:
-            rlock.acquire()
-            self.led.refresh
-#            time.sleep(0.005)
-            rlock.release
-            
-    def stop(self):
-        self.running = False
-        print "stop"
-
-    def display_date(self, month, day):
-        rlock.acquire()
-        # LEDをOnにする処理を記述
-        bitmap = BitmapNumber()
-
-        # mm.dd
-
-        offset = (0, 11)
-        number = bitmap.number(month)
-        self.led.set_pixel(0,1,1)
-        for y in range(len(number)):
-            for x in range(len(number[y])):
-                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
-
-        offset = (4, 11)
-        number = bitmap.number(month)
-        for y in range(len(number)):
-            for x in range(len(number[y])):
-                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
-
-        offset = (9, 11)
-        self.led.set_pixel(offset[0] + 0, offset[1] + 0, 1)
-
-        offset = (11, 11)
-        number = bitmap.number(day)
-        for y in range(len(number)):
-            for x in range(len(number[y])):
-                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
-
-        offset = (15, 11)
-        number = bitmap.number(day)
-        for y in range(len(number)):
-            for x in range(len(number[y])):
-                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
-
-        rlock.release()
-        print "display_date"
-
-        for row in range(16):
-            for col in range(32):
-                screen = self.led.screen
-            print screen[row]
 
 
 if __name__ == "__main__":
@@ -193,7 +209,7 @@ if __name__ == "__main__":
     led.start()
     try:
         while True:
-            led.display_date(0,1)
+            led.display_date(0, 1)
 
     except KeyboardInterrupt:
         print '\nKeyboard Interrupt'
