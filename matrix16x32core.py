@@ -127,45 +127,51 @@ class Display:
     def display_date(self, datetime):
         # 日付mm.ddの表示
         print datetime.strftime('%m.%d')
-        month = datetime.strftime('%m')
-        day = datetime.strftime('%d')
+        month = datetime.strftime('%m')     # mmの2桁
+        day = datetime.strftime('%d')       # ddの2桁
 
         bitmap = BitmapNumber()
 
         left = 0
         top = 11
         
-        offset = (left, top)
-        number = bitmap.bit_of_number(month[0:1])
-        left += len(number) - 1
-        for y in range(len(number)):
-            for x in range(len(number[y])):
-                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
+        # m
+        if month[0:1] != '0':
+            pixel = bitmap.bit_of_number(month[0:1])
+        else:
+            pixel = bitmap.bit_of_blank()
+        for y in range(len(pixel)):
+            for x in range(len(pixel[y])):
+                self.led.set_pixel(left + x, top + y, pixel[y][x])
+        left += len(pixel) - 1
 
-        offset = (left, top)
-        number = bitmap.bit_of_number(month[0:1])
-        left += len(number) - 1
-        for y in range(len(number)):
-            for x in range(len(number[y])):
-                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
+        # m
+        pixel = bitmap.bit_of_number(month[1:2])
+        for y in range(len(pixel)):
+            for x in range(len(pixel[y])):
+                self.led.set_pixel(left + x, top + y, pixel[y][x])
+        left += len(pixel) - 1
 
-        offset = (left, 15)
+        # .
+        self.led.set_pixel(left, 15, 1)
         left += 2
-        self.led.set_pixel(offset[0] + 0, offset[1] + 0, 1)
 
-        offset = (left, top)
-        number = bitmap.bit_of_number(day[0:1])
-        left += len(number) - 1
-        for y in range(len(number)):
-            for x in range(len(number[y])):
-                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
+        # d
+        if day[0:1] != '0':
+            pixel = bitmap.bit_of_number(day[0:1])
+        else:
+            pixel = bitmap.bit_of_blank()
+        for y in range(len(pixel)):
+            for x in range(len(pixel[y])):
+                self.led.set_pixel(left + x, top + y, pixel[y][x])
+        left += len(pixel) - 1
 
-        offset = (left, top)
-        number = bitmap.bit_of_number(day[1:2])
-        left += len(number) - 1
-        for y in range(len(number)):
-            for x in range(len(number[y])):
-                self.led.set_pixel(offset[0] + x, offset[1] + y, number[y][x])
+        # d
+        pixel = bitmap.bit_of_number(day[1:2])
+        for y in range(len(pixel)):
+            for x in range(len(pixel[y])):
+                self.led.set_pixel(left + x, top + y, pixel[y][x])
+        left += len(pixel) - 1
 
 
 # 数字のビットマップ定義クラス
@@ -185,9 +191,21 @@ class BitmapNumber:
                           (0,1,0,0),
                           (1,1,1,0))
 
+        self.bitmap[3] = ((1,1,0,0),
+                          (0,0,1,0),
+                          (1,1,0,0),
+                          (0,0,1,0),
+                          (1,1,0,0))
+
     def bit_of_number(self, no):
         return self.bitmap[int(no)]
 
+    def bit_of_blank(self):
+        return ((0,0,0,0),
+                (0,0,0,0),
+                (0,0,0,0),
+                (0,0,0,0),
+                (0,0,0,0))
 
 if __name__ == "__main__":
 
