@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import time
 from datetime import datetime as dt
 #import smbus
 #import threading
 
-delay = 0.000001
+#delay = 0.000001
+delay = 0.001
 
 # GPIO定義
 red1_pin = 17
@@ -23,152 +24,134 @@ c_pin = 9
 latch_pin = 4
 oe_pin = 2
 
-# GPIOからMatrixLEDを制御するクラス
-class MatrixLED:
-    def __init__(self):
-        # 16x32のスクリーンを定義    
-        self.screen = [[0 for x in xrange(32)] for y in xrange(16)]
-        print "MatrixLED.init"
+# 16x32のスクリーンを定義    
+screen = [[0 for x in xrange(32)] for y in xrange(16)]
+print "MatrixLED.init"
 
-        # GPIOのセットアップ
-#        GPIO.setmode(GPIO.BCM)
-#        GPIO.setwarnings(False)
+# GPIOのセットアップ
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
 
-#        GPIO.setup(red1_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(green1_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(blue1_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(red2_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(green2_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(blue2_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(clock_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(a_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(b_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(c_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(latch_pin, GPIO.OUT, initial=GPIO.LOW)
-#        GPIO.setup(oe_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(red1_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(green1_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(blue1_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(red2_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(green2_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(blue2_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(clock_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(a_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(b_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(c_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(latch_pin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(oe_pin, GPIO.OUT, initial=GPIO.LOW)
 
-    def screen():
-        return self.sereen
+def bits_from_int(x):
+    a_bit = x & 1
+    b_bit = x & 2
+    c_bit = x & 4
+    return (a_bit, b_bit, c_bit)
 
-    def bits_from_int(self, x):
-        a_bit = x & 1
-        b_bit = x & 2
-        c_bit = x & 4
-        return (a_bit, b_bit, c_bit)
+def set_row(row):
+    #time.sleep(delay)
+    a_bit, b_bit, c_bit = bits_from_int(row)
+    GPIO.output(a_pin, a_bit)
+    GPIO.output(b_pin, b_bit)
+    GPIO.output(c_pin, c_bit)
+    #time.sleep(delay)
 
-    def set_row(self, row):
-#        #time.sleep(delay)
-        a_bit, b_bit, c_bit = self.bits_from_int(row)
-#        GPIO.output(a_pin, a_bit)
-#        GPIO.output(b_pin, b_bit)
-#        GPIO.output(c_pin, c_bit)
-#        #time.sleep(delay)
+def set_color_top(color):
+    #time.sleep(delay)
+    red, green, blue = bits_from_int(color)
+    GPIO.output(red1_pin, red)
+    GPIO.output(green1_pin, green)
+    GPIO.output(blue1_pin, blue)
+    #time.sleep(delay)
+ 
+def set_color_bottom(color):
+    #time.sleep(delay)
+    red, green, blue = bits_from_int(color)
+    GPIO.output(red2_pin, red)
+    GPIO.output(green2_pin, green)
+    GPIO.output(blue2_pin, blue)
+    #time.sleep(delay)
 
-    def set_color_top(self, color):
-#        #time.sleep(delay)
-        red, green, blue = self.bits_from_int(color)
-#        GPIO.output(red1_pin, red)
-#        GPIO.output(green1_pin, green)
-#        GPIO.output(blue1_pin, blue)
-#        #time.sleep(delay)
-     
-    def set_color_bottom(self, color):
-#        #time.sleep(delay)
-        red, green, blue = self.bits_from_int(color)
-#        GPIO.output(red2_pin, red)
-#        GPIO.output(green2_pin, green)
-#        GPIO.output(blue2_pin, blue)
-#        #time.sleep(delay)
+def clock():
+    GPIO.output(clock_pin, 1)
+    GPIO.output(clock_pin, 0)
+    return
+ 
+def latch():
+    GPIO.output(latch_pin, 1)
+    GPIO.output(latch_pin, 0)
+    return
 
-    def clock(self):
-#        GPIO.output(clock_pin, 1)
-#        GPIO.output(clock_pin, 0)
-        return
-     
-    def latch(self):
-#        GPIO.output(latch_pin, 1)
-#        GPIO.output(latch_pin, 0)
-        return
+def set_pixel(x, y, color):
+    screen[y][x] = color
 
-    def set_pixel(self, x, y, color):
-        self.screen[y][x] = color
-
-    # LEDの表示リフレッシュ
-    def refresh(self):
-        # 上下８行ずつに分けて出力する
-        for row in range(8):
-#            GPIO.output(oe_pin, 1)
-            self.set_color_top(0)
-            self.set_row(row)
-            #time.sleep(delay)
-            for col in range(32):
-                self.set_color_top(self.screen[row][col])
-                self.set_color_bottom(self.screen[row+8][col])
-                self.clock()
-            #GPIO.output(oe_pin, 0)
-            self.latch()
-#            GPIO.output(oe_pin, 0)
-            time.sleep(delay)
+# LEDの表示リフレッシュ
+def refresh():
+    # 上下８行ずつに分けて出力する
+    for row in range(8):
+        GPIO.output(oe_pin, 1)
+        set_color_top(0)
+        set_row(row)
+        for col in range(32):
+            set_color_top(screen[row][col])
+            set_color_bottom(screen[row+8][col])
+            clock()
+        #GPIO.output(oe_pin, 0)
+        latch()
+        GPIO.output(oe_pin, 0)
+        time.sleep(delay)
 
         # Matrixのbitをコンソールに表示
-        print "MatrixLED.refresh"
-        for row in range(len(self.screen)):
-            print self.screen[row]
+#         print "MatrixLED.refresh"
+#         for row in range(len(screen)):
+#             print screen[row]
 
 
 class Display:
-    def __init__(self):
-        print "Display.init"
-
-        self.led = MatrixLED()
-
-    def refresh(self):
-        self.led.refresh()
-
-    def set_pixel(self, left, top, pixel):
+    def set_pixels(self, left, top, pixel):
         for y in range(len(pixel)):
             for x in range(len(pixel[y])):
-                self.led.set_pixel(left + x, top + y, pixel[y][x])
+                set_pixel(left + x, top + y, pixel[y][x])
         left += len(pixel[0])
         return left
 
 
-    def display_date(self, datetime):
+    def display_date(self, left, top, datetime):
         # 日付mm.ddの表示
-        print datetime.strftime('%m.%d')
+#         print datetime.strftime('%m.%d')
         month = datetime.strftime('%m')     # mmの2桁
         day = datetime.strftime('%d')       # ddの2桁
 
         bitmap = BitmapNumber()
 
-        left = 0
-        top = 11
-        
         # m
         if month[0:1] != '0':
             pixel = bitmap.bit_of_number(month[0:1])
         else:
             pixel = bitmap.bit_of_blank()
-        left = self.set_pixel(left, top, pixel)
+        left = self.set_pixels(left, top, pixel)
 
         # m
         pixel = bitmap.bit_of_number(month[1:2])
-        left = self.set_pixel(left, top, pixel)
+        left = self.set_pixels(left, top, pixel)
 
         # .
         pixel = bitmap.bit_of_dot()
-        left = self.set_pixel(left, top, pixel)
+        left = self.set_pixels(left, top, pixel)
 
         # d
         if day[0:1] != '0':
             pixel = bitmap.bit_of_number(day[0:1])
         else:
             pixel = bitmap.bit_of_blank()
-        left = self.set_pixel(left, top, pixel)
+        left = self.set_pixels(left, top, pixel)
 
         # d
         pixel = bitmap.bit_of_number(day[1:2])
-        left = self.set_pixel(left, top, pixel)
+        left = self.set_pixels(left, top, pixel)
 
 
 # 数字のビットマップ定義クラス
@@ -216,11 +199,11 @@ if __name__ == "__main__":
     # LEDの表示をスタート
     display = Display()
     try:
+        display.display_date(5, 5, dt.now())
         while True:
-            display.display_date(dt.now())
-            display.refresh()
+            refresh()
 
     except KeyboardInterrupt:
         print '\nKeyboard Interrupt'
 
-#    GPIO.cleanup()
+    GPIO.cleanup()
