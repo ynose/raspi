@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 
 #import RPi.GPIO as GPIO
-import threading
 import time
 from datetime import datetime as dt
 #import smbus
+#import threading
 
 delay = 0.000001
 
+# GPIO定義
 red1_pin = 17
 green1_pin = 18
 blue1_pin = 22
@@ -22,7 +23,7 @@ c_pin = 9
 latch_pin = 4
 oe_pin = 2
 
-# MatrixLED物理制御クラス
+# GPIOからMatrixLEDを制御するクラス
 class MatrixLED:
     def __init__(self):
         # 16x32のスクリーンを定義    
@@ -124,6 +125,14 @@ class Display:
     def refresh(self):
         self.led.refresh()
 
+    def set_pixel(self, left, top, pixel):
+        for y in range(len(pixel)):
+            for x in range(len(pixel[y])):
+                self.led.set_pixel(left + x, top + y, pixel[y][x])
+        left += len(pixel[0])
+        return left
+
+
     def display_date(self, datetime):
         # 日付mm.ddの表示
         print datetime.strftime('%m.%d')
@@ -140,38 +149,26 @@ class Display:
             pixel = bitmap.bit_of_number(month[0:1])
         else:
             pixel = bitmap.bit_of_blank()
-        for y in range(len(pixel)):
-            for x in range(len(pixel[y])):
-                self.led.set_pixel(left + x, top + y, pixel[y][x])
-        left += len(pixel) - 1
+        left = self.set_pixel(left, top, pixel)
 
         # m
         pixel = bitmap.bit_of_number(month[1:2])
-        for y in range(len(pixel)):
-            for x in range(len(pixel[y])):
-                self.led.set_pixel(left + x, top + y, pixel[y][x])
-        left += len(pixel) - 1
+        left = self.set_pixel(left, top, pixel)
 
         # .
-        self.led.set_pixel(left, 15, 1)
-        left += 2
+        pixel = bitmap.bit_of_dot()
+        left = self.set_pixel(left, top, pixel)
 
         # d
         if day[0:1] != '0':
             pixel = bitmap.bit_of_number(day[0:1])
         else:
             pixel = bitmap.bit_of_blank()
-        for y in range(len(pixel)):
-            for x in range(len(pixel[y])):
-                self.led.set_pixel(left + x, top + y, pixel[y][x])
-        left += len(pixel) - 1
+        left = self.set_pixel(left, top, pixel)
 
         # d
         pixel = bitmap.bit_of_number(day[1:2])
-        for y in range(len(pixel)):
-            for x in range(len(pixel[y])):
-                self.led.set_pixel(left + x, top + y, pixel[y][x])
-        left += len(pixel) - 1
+        left = self.set_pixel(left, top, pixel)
 
 
 # 数字のビットマップ定義クラス
@@ -206,6 +203,13 @@ class BitmapNumber:
                 (0,0,0,0),
                 (0,0,0,0),
                 (0,0,0,0))
+
+    def bit_of_dot(self):
+        return ((0,0),
+                (0,0),
+                (0,0),
+                (0,0),
+                (1,0))
 
 if __name__ == "__main__":
 
