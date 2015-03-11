@@ -121,7 +121,8 @@ class Display:
 
     def display_date(self, left, top, datetime):
         # 日付mm.ddの表示
-#         print datetime.strftime('%m.%d')
+        print datetime.strftime('%y.%m.%d')
+        
         month = datetime.strftime('%m')     # mmの2桁
         day = datetime.strftime('%d')       # ddの2桁
 
@@ -153,6 +154,42 @@ class Display:
         pixel = bitmap.bit_of_number(day[1:2])
         left = self.set_pixels(left, top, pixel)
 
+    def display_time(self, left, top, datetime):
+        # 日付mm.ddの表示
+        print datetime.strftime('%H:%M:%S')
+        
+        hour = datetime.strftime('%H')      # HHの2桁
+        minute = datetime.strftime('%M')    # MMの2桁
+        second = datetime.strftime('%S')    # SSの2桁
+
+        bitmap = BitmapNumber()
+
+        # H
+        if hour[0:1] != '0':
+            pixel = bitmap.bit_of_number(hour[0:1])
+        else:
+            pixel = bitmap.bit_of_blank()
+        left = self.set_pixels(left, top, pixel)
+
+        # H
+        pixel = bitmap.bit_of_number(hour[1:2])
+        left = self.set_pixels(left, top, pixel)
+
+        # :
+        if int(second) % 2 == 0:
+            pixel = bitmap.bit_of_colon()
+        else:
+            pixel = bitmap.bit_of_blank_half()
+        left = self.set_pixels(left, top, pixel)
+
+        # M
+        pixel = bitmap.bit_of_number(minute[0:1])
+        left = self.set_pixels(left, top, pixel)
+
+        # M
+        pixel = bitmap.bit_of_number(minute[1:2])
+        left = self.set_pixels(left, top, pixel)
+
 
 # 数字のビットマップ定義クラス
 class BitmapNumber:
@@ -171,11 +208,53 @@ class BitmapNumber:
                           (0,1,0,0),
                           (1,1,1,0))
 
+        self.bitmap[2] = ((1,1,1,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,1,1,1))
+
         self.bitmap[3] = ((1,1,0,0),
                           (0,0,1,0),
                           (1,1,0,0),
                           (0,0,1,0),
                           (1,1,0,0))
+
+        self.bitmap[4] = ((1,1,1,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,1,1,1))
+
+        self.bitmap[5] = ((1,1,1,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,1,1,1))
+
+        self.bitmap[6] = ((1,1,1,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,1,1,1))
+
+        self.bitmap[7] = ((1,1,1,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,1,1,1))
+
+        self.bitmap[8] = ((1,1,1,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,1,1,1))
+
+        self.bitmap[9] = ((1,1,1,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,0,0,1),
+                          (1,1,1,1))
 
     def bit_of_number(self, no):
         return self.bitmap[int(no)]
@@ -187,6 +266,13 @@ class BitmapNumber:
                 (0,0,0,0),
                 (0,0,0,0))
 
+    def bit_of_blank_half(self):
+        return ((0,0),
+                (0,0),
+                (0,0),
+                (0,0),
+                (0,0))
+
     def bit_of_dot(self):
         return ((0,0),
                 (0,0),
@@ -194,13 +280,32 @@ class BitmapNumber:
                 (0,0),
                 (1,0))
 
+    def bit_of_colon(self):
+        return ((0,0),
+                (1,0),
+                (0,0),
+                (1,0),
+                (0,0))
+
 if __name__ == "__main__":
 
     # LEDの表示をスタート
     display = Display()
     try:
-        display.display_date(5, 5, dt.now())
+        datetime = dt.today()
+        display.display_date(0, 10, datetime)
         while True:
+            if datetime.strftime('%S') != dt.today().strftime('%S'):
+                # 1秒ごとに時刻表示を更新する
+                display.display_time(0, 0, datetime)
+                
+                # 日付も変わっていたら更新する
+                if datetime.strftime('%d') != dt.today().strftime('%d'):
+                    display.display_date(0, 10, datetime)
+
+                datetime = dt.today()
+                
+            # リフレッシュ
             refresh()
 
     except KeyboardInterrupt:
