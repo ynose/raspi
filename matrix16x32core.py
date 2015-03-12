@@ -8,7 +8,7 @@ from datetime import datetime as dt
 #import threading
 
 #delay = 0.000001
-delay = 0.001
+delay = 0.000001
 
 # GPIO定義
 red1_pin = 17
@@ -26,7 +26,6 @@ oe_pin = 2
 
 # 16x32のスクリーンを定義    
 screen = [[0 for x in xrange(32)] for y in xrange(16)]
-print "MatrixLED.init"
 
 # GPIOのセットアップ
 GPIO.setmode(GPIO.BCM)
@@ -86,7 +85,7 @@ def latch():
     return
 
 def set_pixel(x, y, color):
-    screen[y][x] = color
+     screen[y][x] = color
 
 # LEDの表示リフレッシュ
 def refresh():
@@ -176,10 +175,10 @@ class Display:
         left = self.set_pixels(left, top, pixel)
 
         # :
-        if int(second) % 2 == 0:
-            pixel = bitmap.bit_of_colon()
-        else:
-            pixel = bitmap.bit_of_blank_half()
+ #       if int(second) % 2 == 0:
+        pixel = bitmap.bit_of_colon()
+ #       else:
+ #           pixel = bitmap.bit_of_blank_half()
         left = self.set_pixels(left, top, pixel)
 
         # M
@@ -190,6 +189,20 @@ class Display:
         pixel = bitmap.bit_of_number(minute[1:2])
         left = self.set_pixels(left, top, pixel)
 
+        # :
+#        if int(second) % 2 == 0:
+        pixel = bitmap.bit_of_colon()
+#        else:
+#            pixel = bitmap.bit_of_blank_half()
+        left = self.set_pixels(left, top, pixel)
+
+        # S
+        pixel = bitmap.bit_of_number(second[0:1])
+        left = self.set_pixels(left, top, pixel)
+
+        # S
+        pixel = bitmap.bit_of_number(second[1:2])
+        left = self.set_pixels(left, top, pixel)
 
 # 数字のビットマップ定義クラス
 class BitmapNumber:
@@ -208,11 +221,11 @@ class BitmapNumber:
                           (0,1,0,0),
                           (1,1,1,0))
 
-        self.bitmap[2] = ((1,1,1,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,1,1,1))
+        self.bitmap[2] = ((1,1,0,0),
+                          (0,0,1,0),
+                          (0,1,0,0),
+                          (1,0,0,0),
+                          (1,1,1,0))
 
         self.bitmap[3] = ((1,1,0,0),
                           (0,0,1,0),
@@ -220,41 +233,41 @@ class BitmapNumber:
                           (0,0,1,0),
                           (1,1,0,0))
 
-        self.bitmap[4] = ((1,1,1,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,1,1,1))
+        self.bitmap[4] = ((0,1,0,0),
+                          (1,1,0,0),
+                          (1,1,1,0),
+                          (0,1,0,0),
+                          (0,1,0,0))
 
-        self.bitmap[5] = ((1,1,1,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,1,1,1))
+        self.bitmap[5] = ((1,1,1,0),
+                          (1,0,0,0),
+                          (1,1,0,0),
+                          (0,0,1,0),
+                          (1,1,0,0))
 
-        self.bitmap[6] = ((1,1,1,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,1,1,1))
+        self.bitmap[6] = ((0,1,1,0),
+                          (1,0,0,0),
+                          (1,1,1,0),
+                          (1,0,1,0),
+                          (0,1,0,0))
 
-        self.bitmap[7] = ((1,1,1,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,1,1,1))
+        self.bitmap[7] = ((1,1,1,0),
+                          (0,0,1,0),
+                          (0,1,0,0),
+                          (0,1,0,0),
+                          (0,1,0,0))
 
-        self.bitmap[8] = ((1,1,1,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,1,1,1))
+        self.bitmap[8] = ((1,1,1,0),
+                          (1,0,1,0),
+                          (0,1,0,0),
+                          (1,0,1,0),
+                          (1,1,1,0))
 
-        self.bitmap[9] = ((1,1,1,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,0,0,1),
-                          (1,1,1,1))
+        self.bitmap[9] = ((0,1,0,0),
+                          (1,0,1,0),
+                          (1,1,1,0),
+                          (0,0,1,0),
+                          (1,1,0,0))
 
     def bit_of_number(self, no):
         return self.bitmap[int(no)]
@@ -293,16 +306,16 @@ if __name__ == "__main__":
     display = Display()
     try:
         datetime = dt.today()
-        display.display_date(0, 10, datetime)
+        display.display_date(0, 1, datetime)
         while True:
             if datetime.strftime('%S') != dt.today().strftime('%S'):
-                # 1秒ごとに時刻表示を更新する
-                display.display_time(0, 0, datetime)
-                
                 # 日付も変わっていたら更新する
                 if datetime.strftime('%d') != dt.today().strftime('%d'):
-                    display.display_date(0, 10, datetime)
+                    display.display_date(0, 1, datetime)
 
+                # 1秒ごとに時刻表示を更新する
+                display.display_time(2, 10, datetime)
+                
                 datetime = dt.today()
                 
             # リフレッシュ
