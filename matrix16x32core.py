@@ -8,7 +8,7 @@ from datetime import datetime as dt
 #import threading
 
 #delay = 0.000001
-delay = 0.000001
+delay = 0.0001
 
 # GPIO定義
 red1_pin = 17
@@ -117,13 +117,27 @@ class Display:
         left += len(pixel[0])
         return left
 
+    # 天気予報の表示
+    def display_weather(self, left, top, weather):
+        bitmap = BitmapWeather()
+        
+        pixel = bitmap.bit_of_weather(weather)
+        left = self.set_pixels(left, top, pixel)
+    
+        pixel = bitmap.bit_of_weather(weather+1)
+        left = self.set_pixels(left, top, pixel)
 
+        pixel = bitmap.bit_of_weather(weather+2)
+        left = self.set_pixels(left, top, pixel)
+    
+
+    # 日付の表示
     def display_date(self, left, top, datetime):
-        # 日付mm.ddの表示
-        print datetime.strftime('%y.%m.%d')
+#        print datetime.strftime('%y.%m.%d')
         
         month = datetime.strftime('%m')     # mmの2桁
         day = datetime.strftime('%d')       # ddの2桁
+        weekday = datetime.isoweekday()
 
         bitmap = BitmapNumber()
 
@@ -153,9 +167,16 @@ class Display:
         pixel = bitmap.bit_of_number(day[1:2])
         left = self.set_pixels(left, top, pixel)
 
+        # weekday
+        bitmap = BitmapWeekday()
+
+        pixel = bitmap.bit_of_weekday(weekday)
+        left = self.set_pixels(left, top, pixel)
+
+
+    # 時刻の表示
     def display_time(self, left, top, datetime):
-        # 日付mm.ddの表示
-        print datetime.strftime('%H:%M:%S')
+#        print datetime.strftime('%H:%M:%S')
         
         hour = datetime.strftime('%H')      # HHの2桁
         minute = datetime.strftime('%M')    # MMの2桁
@@ -300,68 +321,109 @@ class BitmapNumber:
                 (1,0),
                 (0,0))
 
-# 数字のビットマップ定義クラス
+# 曜日のビットマップ定義クラス
 class BitmapWeekday:
     def __init__(self):
-        self.bitmap = [0 for x in range(7)] # 0で初期化された配列を作る
+        self.bitmap = [1 for x in range(8)] # 0で初期化された配列を作る
 
-        self.bitmap[0] = ((0,1,1,1,1),
-                          (0,1,0,0,1),
-                          (0,1,1,1,1),
-                          (0,1,0,0,1),
-                          (0,1,1,1,1))
-
-        self.bitmap[0] = ((0,1,1,1,1),
+        self.bitmap[1] = ((0,1,1,1,1),
                           (0,1,0,0,1),
                           (0,1,1,1,1),
                           (0,1,0,0,1),
                           (1,0,0,1,1))
 
-        self.bitmap[0] = ((0,0,1,0,0),
+        self.bitmap[2] = ((0,0,1,0,0),
                           (1,0,1,0,1),
                           (1,0,1,0,1),
                           (0,0,1,0,0),
                           (1,1,0,1,1))
 
-        self.bitmap[0] = ((0,0,1,0,0),
+        self.bitmap[3] = ((0,0,1,0,0),
                           (1,1,1,0,1),
                           (0,1,1,1,0),
                           (1,0,1,0,1),
                           (0,1,1,0,0))
 
-        self.bitmap[0] = ((0,0,1,0,0),
+        self.bitmap[4] = ((0,0,1,0,0),
                           (1,1,1,1,1),
                           (0,1,1,1,0),
                           (1,0,1,0,1),
                           (0,0,1,0,0))
 
-        self.bitmap[0] = ((0,0,1,0,0),
+        self.bitmap[5] = ((0,0,1,0,0),
                           (0,1,1,1,0),
                           (1,0,1,0,1),
                           (0,1,1,1,0),
                           (1,1,1,1,1))
 
-        self.bitmap[0] = ((0,0,1,0,0),
+        self.bitmap[6] = ((0,0,1,0,0),
                           (0,0,1,0,0),
                           (0,1,1,1,0),
                           (0,0,1,0,0),
                           (1,1,1,1,1))
+
+        self.bitmap[7] = ((0,1,1,1,1),
+                          (0,1,0,0,1),
+                          (0,1,1,1,1),
+                          (0,1,0,0,1),
+                          (0,1,1,1,1))
+
+    def bit_of_weekday(self, no):
+        return self.bitmap[int(no)]
+
+
+# 天気のビットマップ定義クラス
+class BitmapWeather:
+    def __init__(self):
+        self.bitmap = [0 for x in range(3)] # 0で初期化された配列を作る
+
+        self.bitmap[0] = ((0,0,0,0,1,0,0,0),
+                          (0,0,1,0,1,0,1,0),
+                          (0,0,0,1,1,1,0,0), 
+                          (0,1,1,1,1,1,1,1),
+                          (0,0,0,1,1,1,0,0),
+                          (0,0,1,0,1,0,1,0), 
+                          (0,0,0,0,1,0,0,0))
+
+        self.bitmap[1] = ((0,0,0,0,1,0,0,0),
+                          (0,0,1,1,1,1,1,0),
+                          (0,1,1,1,1,1,1,1), 
+                          (0,1,1,1,1,1,1,1),
+                          (0,0,0,0,1,0,0,0),
+                          (0,0,1,0,1,0,0,0), 
+                          (0,0,0,1,1,0,0,0))
+
+        self.bitmap[2] = ((0,0,0,0,0,0,0,0),
+                          (0,0,0,1,1,0,0,0),
+                          (0,0,1,0,0,1,0,0), 
+                          (0,1,0,0,1,1,1,0),
+                          (0,1,0,1,0,0,1,1),
+                          (0,1,0,0,0,0,0,1), 
+                          (0,0,1,1,1,1,1,0))
+
+    def bit_of_weather(self, no):
+        return self.bitmap[int(no)]
+
 
 if __name__ == "__main__":
 
     # LEDの表示をスタート
     display = Display()
     try:
+        # 天気を表示
+        display.display_weather(0, 0, 0)
+        
+        # 日付を表示
         datetime = dt.today()
-        display.display_date(0, 1, datetime)
+        display.display_date(0, 11, datetime)
         while True:
-            if datetime.strftime('%S') != dt.today().strftime('%S'):
-                # 日付も変わっていたら更新する
-                if datetime.strftime('%d') != dt.today().strftime('%d'):
-                    display.display_date(0, 1, datetime)
+            #if datetime.strftime('%S') != dt.today().strftime('%S'):
+            #   # 日付も変わっていたら更新する
+            if datetime.strftime('%d') != dt.today().strftime('%d'):
+                display.display_date(0, 11, datetime)
 
                 # 1秒ごとに時刻表示を更新する
-                display.display_time(2, 10, datetime)
+                #display.display_time(2, 10, datetime)
                 
                 datetime = dt.today()
                 
