@@ -5,7 +5,11 @@ import RPi.GPIO as GPIO
 import time
 from datetime import datetime as dt
 #import smbus
-#import threading
+
+import threading
+import urllib
+import json
+
 
 #delay = 0.000001
 delay = 0.0001
@@ -124,11 +128,11 @@ class Display:
         pixel = bitmap.bit_of_weather(weather)
         left = self.set_pixels(left, top, pixel)
     
-        pixel = bitmap.bit_of_weather(weather+1)
-        left = self.set_pixels(left, top, pixel)
-
-        pixel = bitmap.bit_of_weather(weather+2)
-        left = self.set_pixels(left, top, pixel)
+#         pixel = bitmap.bit_of_weather(weather+1)
+#         left = self.set_pixels(left, top, pixel)
+# 
+#         pixel = bitmap.bit_of_weather(weather+2)
+#         left = self.set_pixels(left, top, pixel)
     
 
     # 日付の表示
@@ -155,6 +159,32 @@ class Display:
         # .
         pixel = bitmap.bit_of_dot()
         left = self.set_pixels(left, top, pixel)
+
+        # d
+        if day[0:1] != '0':
+            pixel = bitmap.bit_of_number(day[0:1])
+        else:
+            pixel = bitmap.bit_of_blank()
+        left = self.set_pixels(left, top, pixel)
+
+        # d
+        pixel = bitmap.bit_of_number(day[1:2])
+        left = self.set_pixels(left, top, pixel)
+
+        # weekday
+        bitmap = BitmapWeekday()
+
+        pixel = bitmap.bit_of_weekday(weekday)
+        left = self.set_pixels(left, top, pixel)
+
+
+    def display_dateweek(self, left, top, datetime):
+#        print datetime.strftime('%y.%m.%d')
+        
+        day = datetime.strftime('%d')       # ddの2桁
+        weekday = datetime.isoweekday()
+
+        bitmap = BitmapNumber()
 
         # d
         if day[0:1] != '0':
@@ -224,6 +254,107 @@ class Display:
         # S
         pixel = bitmap.bit_of_number(second[1:2])
         left = self.set_pixels(left, top, pixel)
+
+
+    # 気温の表示
+    def display_temperature(self, left, top, temperature):
+        print "{0:0>2}".format(temperature) + "℃"
+        
+        temp = "{0:0>2}".format(temperature)
+
+        bitmap = BitmapNumber()
+
+        if temp[0:1] != '0':
+            pixel = bitmap.bit_of_number(temp[0:1])
+        else:
+            pixel = bitmap.bit_of_blank()
+        left = self.set_pixels(left, top, pixel)
+
+        pixel = bitmap.bit_of_number(temp[1:2])
+        left = self.set_pixels(left, top, pixel)
+
+
+def getWeather():
+    json_str = livedoor_weather_api()
+    livedoor_weather_json(json_str)
+    
+
+def livedoor_weather_api():
+    print " === start sub thread (livedoor_weather_api) === "
+    
+    url = 'http://weather.livedoor.com/forecast/webservice/json/v1?city=120010'
+
+    #print url + params
+    response = urllib.urlopen(url)
+    return response.read()
+    
+def livedoor_weather_json(s):
+    print " === start sub thread (livedoor_weather_json) === "
+
+    item_list = json.loads(s)
+    
+    # 場所名
+    print urllib.unquote(item_list["title"].encode('utf8'))
+    # 今日[0]
+    forecasts_today = item_list["forecasts"][0]
+    print urllib.unquote(forecasts_today['dateLabel'].encode('utf8') + forecasts_today['date'].encode('utf8'))
+    print urllib.unquote(forecasts_today['telop'].encode('utf8'))
+    # 最高気温
+    temperature_max = "--"
+    if forecasts_today['temperature']['max'] is not None:
+        temperature_max = urllib.unquote(forecasts_today['temperature']['max']['celsius'].encode('utf8'))
+
+    # 最低気温
+    temperature_min = "--"
+    if forecasts_today['temperature']['min'] is not None:
+        temperature_min = urllib.unquote(forecasts_today['temperature']['min']['celsius'].encode('utf8'))
+
+    print urllib.unquote(temperature_max + "/" + temperature_min) + "℃"
+
+    print ""
+        
+    # 明日[1]
+    forecasts_tomorrow = item_list["forecasts"][1]
+    print urllib.unquote(forecasts_tomorrow['dateLabel'].encode('utf8') + forecasts_tomorrow['date'].encode('utf8'))
+    print urllib.unquote(forecasts_tomorrow['telop'].encode('utf8'))
+    # 最高気温
+    temperature_max = "--"
+    if forecasts_tomorrow['temperature']['max'] is not None:
+        temperature_max = urllib.unquote(forecasts_tomorrow['temperature']['max']['celsius'].encode('utf8'))
+
+    # 最低気温
+    temperature_min = "--"
+    if forecasts_tomorrow['temperature']['min'] is not None:
+        temperature_min = urllib.unquote(forecasts_tomorrow['temperature']['min']['celsius'].encode('utf8'))
+        
+    print urllib.unquote(temperature_max + "/" + temperature_min) + "℃"
+    
+    # 明日の天気と気温
+#     today = dt.strptime(forecasts_today['date'], '%Y-%m-%d')
+#     display.display_dateweek(0, 1, today)
+    weather1 = urllib.unquote(forecasts_tomorrow['telop'].encode('utf8'))[0:3]
+    print weather1
+    if weather1 == "晴":
+        weather1_no = 0
+    elif weather1 == "曇":
+        weather1_no = 1
+    elif weather1 == "雨":
+        weather1_no = 2
+
+    weather2 = urllib.unquote(forecasts_tomorrow['telop'].encode('utf8'))[9:12]
+    print weather2
+    if weather2 == "晴":
+        weather2_no = 0
+    elif weather2 == "曇":
+        weather2_no = 1
+    elif weather2 == "雨":
+        weather2_no = 2
+
+    display.display_weather(0, 0, weather1_no)
+    display.display_weather(10, 0, weather2_no)
+    
+    display.display_temperature(20, 1, temperature_max)
+
 
 # 数字のビットマップ定義クラス
 class BitmapNumber:
@@ -377,6 +508,7 @@ class BitmapWeather:
     def __init__(self):
         self.bitmap = [0 for x in range(3)] # 0で初期化された配列を作る
 
+        # 晴れ
         self.bitmap[0] = ((0,0,0,0,1,0,0,0),
                           (0,0,1,0,1,0,1,0),
                           (0,0,0,1,1,1,0,0), 
@@ -385,21 +517,23 @@ class BitmapWeather:
                           (0,0,1,0,1,0,1,0), 
                           (0,0,0,0,1,0,0,0))
 
-        self.bitmap[1] = ((0,0,0,0,1,0,0,0),
-                          (0,0,1,1,1,1,1,0),
-                          (0,1,1,1,1,1,1,1), 
-                          (0,1,1,1,1,1,1,1),
-                          (0,0,0,0,1,0,0,0),
-                          (0,0,1,0,1,0,0,0), 
-                          (0,0,0,1,1,0,0,0))
-
-        self.bitmap[2] = ((0,0,0,0,0,0,0,0),
+        # 曇り
+        self.bitmap[1] = ((0,0,0,0,0,0,0,0),
                           (0,0,0,1,1,0,0,0),
                           (0,0,1,0,0,1,0,0), 
                           (0,1,0,0,1,1,1,0),
                           (0,1,0,1,0,0,1,1),
                           (0,1,0,0,0,0,0,1), 
                           (0,0,1,1,1,1,1,0))
+
+        # 雨
+        self.bitmap[2] = ((0,0,0,0,1,0,0,0),
+                          (0,0,1,1,1,1,1,0),
+                          (0,1,1,1,1,1,1,1), 
+                          (0,1,1,1,1,1,1,1),
+                          (0,0,0,0,1,0,0,0),
+                          (0,0,1,0,1,0,0,0), 
+                          (0,0,0,1,1,0,0,0))
 
     def bit_of_weather(self, no):
         return self.bitmap[int(no)]
@@ -409,18 +543,19 @@ if __name__ == "__main__":
 
     # LEDの表示をスタート
     display = Display()
+
+    th = threading.Thread(target=getWeather)
+    th.setDaemon(True)  # Trueでメインスレッドが終了したらサブスレッドも終了させる
+    th.start()    
+
     try:
-        # 天気を表示
-        display.display_weather(0, 0, 0)
-        
         # 日付を表示
         datetime = dt.today()
-        display.display_date(0, 11, datetime)
+        display.display_date(0, 10, datetime)
         while True:
-            #if datetime.strftime('%S') != dt.today().strftime('%S'):
-            #   # 日付も変わっていたら更新する
+            # 日付も変わっていたら更新する
             if datetime.strftime('%d') != dt.today().strftime('%d'):
-                display.display_date(0, 11, datetime)
+                display.display_date(0, 10, datetime)
 
                 # 1秒ごとに時刻表示を更新する
                 #display.display_time(2, 10, datetime)
