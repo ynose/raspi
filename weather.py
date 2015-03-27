@@ -9,60 +9,82 @@ import time
 import datetime
 
 
+
 def getWeather():
-    json_str = livedoor_weather_api()
-    livedoor_weather_json(json_str)
-    
+    today_date, today_telop, today_temperature_max, today_temperature_min, tomorrow_date, tomorrow_telop, tomorrow_temperature_max, tomorrow_temperature_min = getWeatherData()
 
-def livedoor_weather_api():
-    print " === start sub thread (livedoor_weather_api) === "
+    print "today   ：%s %s/%s℃" % (today_telop, today_temperature_max, today_temperature_min)
     
+    print "tomorrow：%s %s/%s℃" % (tomorrow_telop, tomorrow_temperature_max, tomorrow_temperature_min)
+
+
+def getWeatherData():
+    json_str = get_weather_json()
+
+    return parse_json(json_str)
+
+
+def get_weather_json():
     url = 'http://weather.livedoor.com/forecast/webservice/json/v1?city=120010'
+    print " === urlopen %s ===" % url
 
-    #print url + params
     response = urllib.urlopen(url)
     return response.read()
-    
-def livedoor_weather_json(s):
-    print " === start sub thread (livedoor_weather_json) === "
+
+
+def parse_json(s):
+    print " === parse json === "
 
     item_list = json.loads(s)
     
     # 場所名
-    print urllib.unquote(item_list["title"].encode('utf8'))
+    # print urllib.unquote(item_list["title"].encode('utf8'))
+
     # 今日[0]
     forecasts_today = item_list["forecasts"][0]
-    print urllib.unquote(forecasts_today['dateLabel'].encode('utf8') + forecasts_today['date'].encode('utf8'))
-    print urllib.unquote(forecasts_today['telop'].encode('utf8'))
+
+    # 日付
+    today_date = urllib.unquote(forecasts_today['dateLabel'].encode('utf8') + forecasts_today['date'].encode('utf8'))
+
+    # 天気
+    today_telop = urllib.unquote(forecasts_today['telop'].encode('utf8'))
+
+    
     # 最高気温
-    temperature_max = "--"
+    today_temperature_max = "--"
     if forecasts_today['temperature']['max'] is not None:
-        temperature_max = urllib.unquote(forecasts_today['temperature']['max']['celsius'].encode('utf8'))
+        today_temperature_max = urllib.unquote(forecasts_today['temperature']['max']['celsius'].encode('utf8'))
 
     # 最低気温
-    temperature_min = "--"
+    today_temperature_min = "--"
     if forecasts_today['temperature']['min'] is not None:
-        temperature_min = urllib.unquote(forecasts_today['temperature']['min']['celsius'].encode('utf8'))
+        today_temperature_min = urllib.unquote(forecasts_today['temperature']['min']['celsius'].encode('utf8'))
 
-    print urllib.unquote(temperature_max + "/" + temperature_min) + "℃"
 
-    print ""
         
     # 明日[1]
     forecasts_tomorrow = item_list["forecasts"][1]
-    print urllib.unquote(forecasts_tomorrow['dateLabel'].encode('utf8') + forecasts_tomorrow['date'].encode('utf8'))
-    print urllib.unquote(forecasts_tomorrow['telop'].encode('utf8'))
+
+    # 日付
+    tomorrow_date = urllib.unquote(forecasts_tomorrow['dateLabel'].encode('utf8') + forecasts_tomorrow['date'].encode('utf8'))
+
+    # 天気
+    tomorrow_telop = urllib.unquote(forecasts_tomorrow['telop'].encode('utf8'))
+
+
     # 最高気温
-    temperature_max = "--"
+    tomorrow_temperature_max = "--"
     if forecasts_tomorrow['temperature']['max'] is not None:
-        temperature_max = urllib.unquote(forecasts_tomorrow['temperature']['max']['celsius'].encode('utf8'))
+        tomorrow_temperature_max = urllib.unquote(forecasts_tomorrow['temperature']['max']['celsius'].encode('utf8'))
 
     # 最低気温
-    temperature_min = "--"
+    tomorrow_temperature_min = "--"
     if forecasts_tomorrow['temperature']['min'] is not None:
-        temperature_min = urllib.unquote(forecasts_tomorrow['temperature']['min']['celsius'].encode('utf8'))
+        tomorrow_temperature_min = urllib.unquote(forecasts_tomorrow['temperature']['min']['celsius'].encode('utf8'))
         
-    print urllib.unquote(temperature_max + "/" + temperature_min) + "℃"
+
+    return (today_date, today_telop, today_temperature_max, today_temperature_min, tomorrow_date, tomorrow_telop, tomorrow_temperature_max, tomorrow_temperature_min)
+
 
 if __name__ == '__main__':
     th = threading.Thread(target=getWeather)
